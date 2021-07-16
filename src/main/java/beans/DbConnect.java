@@ -8,7 +8,7 @@ public class DbConnect {
 
 	private static DbConnect connect;
 	private Connection connection;
-	private static final String adress = "jdbc:mysql://localhost:3306/projetagile?characterEncoding=utf8";
+	private static final String adress = "jdbc:mysql://localhost:3306/emargement_en_ligne?characterEncoding=utf8";
 	private static final String id = "root";
 	private static final String password = "";
 	

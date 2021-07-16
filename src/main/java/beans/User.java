@@ -13,11 +13,12 @@ public class User implements Crud{
 	private String surname;
 	private String name;
 	private String email;
+	private String password;
 	private String phone;
 	private String adress;
 	private String gender;
-	private int cat;
 	private int idFormation;
+	private boolean intern;
 	
 	public int getIdUser() {
 		return idUser;
@@ -36,6 +37,12 @@ public class User implements Crud{
 	}
 	public void setName(String name) {
 		this.name = name;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
 	}
 	public String getEmail() {
 		return email;
@@ -61,12 +68,7 @@ public class User implements Crud{
 	public void setGender(String gender) {
 		this.gender = gender;
 	}
-	public int getCat() {
-		return cat;
-	}
-	public void setCat(int cat) {
-		this.cat = cat;
-	}
+	
 	public int getIdFormation() {
 		return idFormation;
 	}
@@ -74,20 +76,30 @@ public class User implements Crud{
 		this.idFormation = idFormation;
 	}
 	
+	public boolean isIntern() {
+		return intern;
+	}
+	public void setIntern(boolean intern) {
+		this.intern = intern;
+	}
+	
 	@Override
 	public void insert() {
-		String query = "INSERT INTO `user`("
-				+ "`surname`, `name`, `email`, `phone`, `adress`, `gender`, `cat`, `id_formation`)"
+		String query = "INSERT INTO `?`("
+				+ "surname, name, email, password, phone, adress, gender, id_formation)"
 				+ " VALUES (?,?,?,?,?,?,?,?)";
 		try (PreparedStatement p = DbConnect.getConnector().prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
-			p.setString(1, getSurname());
-			p.setString(2, getName());
-			p.setString(3, getEmail());
-			p.setString(4, getPhone());
-			p.setString(5, getAdress());
-			p.setString(6, getGender());
-			p.setInt(7, getCat());
-			p.setInt(8, getIdFormation());
+			
+			p.setString(1, isIntern() ? "Intern":"Former"); // Créer dans la table intern ou former selon de qui il s'agit
+			
+			p.setString(2, getSurname());
+			p.setString(3, getName());
+			p.setString(4, getEmail());
+			p.setString(5, getPassword());
+			p.setString(6, getPhone());
+			p.setString(7, getAdress());
+			p.setString(8, getGender());
+			p.setInt(9, getIdFormation());
 			p.executeUpdate();
 			
 			ResultSet result = p.getGeneratedKeys();
@@ -104,11 +116,11 @@ public class User implements Crud{
 	
 	@Override
 	public List<?> selectAll() {
-		String query = "select 'id_user',`surname`, `name`, `email`, `phone`, `adress`, `gender`, `cat`, `id_formation`"
-				+ "from user";
+		String query = "select 'id_user',`surname`, `name`, `email`, `password`, `phone`, `adress`, `gender`, `id_formation`"
+				+ "from ?";
 		ArrayList<User> users = new ArrayList<>();
 		try (PreparedStatement p = DbConnect.getConnector().prepareStatement(query)){
-			
+			p.setString(1, isIntern() ? "Intern":"Former");
 			ResultSet result = p.executeQuery(query);
 			while (result.next()) {
 				User u = new User();
@@ -116,11 +128,13 @@ public class User implements Crud{
 				u.setSurname(result.getString("surname"));
 				u.setName(result.getString("name"));
 				u.setEmail(result.getString("email"));
+				u.setPassword(result.getString("password"));
 				u.setPhone(result.getString("phone"));
 				u.setAdress(result.getString("adress"));
 				u.setGender(result.getString("gender"));
-				u.setCat(result.getInt("cat"));
 				u.setIdFormation(result.getInt("id_formation"));
+				u.setIntern(this.isIntern()); // L'user créé est soit intern soit former
+				
 				users.add(u);
 			}
 				
@@ -136,21 +150,22 @@ public class User implements Crud{
 	
 	@Override
 	public User select() {
-		String query = "select `surname`, `name`, `email`, `phone`, `adress`, `gender`, `cat`, `id_formation`"
-				+ "from user where id_user = ?";
+		String query = "select `surname`, `name`, `email`,`password`, `phone`, `adress`, `gender`, `id_formation`"
+				+ "from ? where id_user = ?";
 		
 		try (PreparedStatement p = DbConnect.getConnector().prepareStatement(query)){
-			p.setInt(1,  getIdUser());
+			p.setString(1,  this.isIntern() ? "Intern":"Former");
+			p.setInt(2,  getIdUser());
 			ResultSet result = p.executeQuery(query);
 			while (result.next()) {
 				this.setIdUser(result.getInt("id_user"));
 				this.setSurname(result.getString("surname"));
 				this.setName(result.getString("name"));
 				this.setEmail(result.getString("email"));
+				this.setEmail(result.getString("email"));
 				this.setPhone(result.getString("phone"));
 				this.setAdress(result.getString("adress"));
 				this.setGender(result.getString("gender"));
-				this.setCat(result.getInt("cat"));
 				this.setIdFormation(result.getInt("id_formation"));
 				
 			}
@@ -164,22 +179,25 @@ public class User implements Crud{
 		}
 		return this;
 	}
+	
 	@Override
 	public void update() {
-		String query = "update `user`"
-				+ "set `surname` = ?, `name` = ?, `email` = ?, `phone` = ?, `adress` = ?, `gender` = ?, `cat = ?`,"
-				+ " `id_formation` = ?"
+		String query = "update `?`"
+				+ "set `surname` = ?, `name` = ?, `email` = ?, `password` = ?,"
+				+ " `phone` = ?, `adress` = ?, `gender` = ?,`id_formation` = ?"
 				+ " where id_user = ?";
 		try (PreparedStatement p = DbConnect.getConnector().prepareStatement(query)){
-			p.setString(1, getSurname());
-			p.setString(2, getName());
-			p.setString(3, getEmail());
-			p.setString(4, getPhone());
-			p.setString(5, getAdress());
-			p.setString(6, getGender());
-			p.setInt(7, getCat());
-			p.setInt(8, getIdFormation());
-			p.setInt(9, getIdUser());
+			p.setString(1, this.isIntern()?"Intern":"Former");
+			p.setString(2, getSurname());
+			p.setString(3, getName());
+			p.setString(4, getEmail());
+			p.setString(5, getPassword());
+			p.setString(6, getPhone());
+			p.setString(7, getAdress());
+			p.setString(8, getGender());
+			
+			p.setInt(9, getIdFormation());
+			p.setInt(10, getIdUser());
 			
 			p.executeUpdate();
 			
@@ -193,11 +211,11 @@ public class User implements Crud{
 	}
 	@Override
 	public void delete() {
-		String query = "delete from `user`"
+		String query = "delete from `?`"
 				+ " where id_user = ?";
 		try (PreparedStatement p = DbConnect.getConnector().prepareStatement(query)){
-			
-			p.setInt(1, getIdUser());
+			p.setString(1, this.isIntern() ? "Intern":"Former");
+			p.setInt(2, getIdUser());
 			
 			p.executeUpdate();
 			
