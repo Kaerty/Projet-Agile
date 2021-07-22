@@ -13,6 +13,12 @@ public class Day implements Crud {
 	private int idDay;
 	private Date date;
 	private String activity;
+	private int idFormer;
+	private int idFormation;
+	private String surnameFormer;
+	private String nameFormer;
+	
+	
 	
 	public int getIdDay() {
 		return idDay;
@@ -33,14 +39,41 @@ public class Day implements Crud {
 		this.activity = activity;
 	}
 	
+	public int getIdFormer() {
+		return idFormer;
+	}
+	public void setIdFormer(int idFormer) {
+		this.idFormer = idFormer;
+	}
+	public int getIdFormation() {
+		return idFormation;
+	}
+	public void setIdFormation(int idFormation) {
+		this.idFormation = idFormation;
+	}
+	public String getSurnameFormer() {
+		return surnameFormer;
+	}
+	public void setSurnameFormer(String surnameFormer) {
+		this.surnameFormer = surnameFormer;
+	}
+	public String getNameFormer() {
+		return nameFormer;
+	}
+	public void setNameFormer(String nameFormer) {
+		this.nameFormer = nameFormer;
+	}
+	
 	@Override
 	public void insert() {
-		String query = "INSERT INTO `day`("
-				+  "'date`, `activity`)"
-				+ " VALUES (?,?)";
+		String query = "INSERT INTO day ("
+				+  "date, activity, id_former, id_formation)"
+				+ " VALUES (?,?,?,?);";
 		try (PreparedStatement p = DbConnect.getConnector().prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
 			p.setDate(1, getDate());
 			p.setString(2, getActivity());
+			p.setInt(3, getIdFormer());
+			p.setInt(4, getIdFormation());
 			
 			p.executeUpdate();
 			
@@ -69,6 +102,37 @@ public class Day implements Crud {
 				d.setIdDay(result.getInt("id_day"));
 				d.setDate(result.getDate("date"));
 				d.setActivity(result.getString("activity"));
+				
+				days.add(d);
+			}
+			DbConnect.getConnector().close();
+			
+		}
+		catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return days;
+	}
+	
+	public ArrayList<Day> selectAllByFormation() {
+		String query = "SELECT id_day, date, activity, d.id_formation, d.id_former, fo.surname, fo.name  "
+				+ " FROM day d, formation f, former fo WHERE d.id_formation = f.id_formation AND d.id_formation = ?"
+				+ " AND d.id_former = fo.id_former;";
+		ArrayList<Day> days = new ArrayList<>();
+		try (PreparedStatement p = DbConnect.getConnector().prepareStatement(query)){
+			
+			p.setInt(1, getIdFormation());
+			
+			ResultSet result = p.executeQuery();
+			while (result.next()) {
+				Day d = new Day();
+				d.setIdDay(result.getInt("id_day"));
+				d.setDate(result.getDate("date"));
+				d.setActivity(result.getString("activity"));
+				d.setIdFormation(result.getInt("id_formation"));
+				d.setIdFormer(result.getInt("id_former"));
+				d.setSurnameFormer(result.getString("surname"));
+				d.setNameFormer(result.getString("name"));
 				
 				days.add(d);
 			}

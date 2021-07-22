@@ -13,6 +13,9 @@ public class HalfDay implements Crud{
 	private int idHd;
 	private Date date;
 	private boolean morning;
+	private int idUser;
+	private boolean ichecked;
+	private boolean fchecked;
 	
 	public int getIdHd() {
 		return idHd;
@@ -33,14 +36,34 @@ public class HalfDay implements Crud{
 		this.morning = morning;
 	}
 	
+	public int getIdUser() {
+		return idUser;
+	}
+	public void setIdUser(int idUser) {
+		this.idUser = idUser;
+	}
+	public boolean isIchecked() {
+		return ichecked;
+	}
+	public void setIchecked(boolean ichecked) {
+		this.ichecked = ichecked;
+	}
+	public boolean isFchecked() {
+		return fchecked;
+	}
+	public void setFchecked(boolean fchecked) {
+		this.fchecked = fchecked;
+	}
+	
 	@Override
 	public void insert() {
-		String query = "INSERT INTO `half_day`("
-				+  "'date`, `morning`)"
-				+ " VALUES (?,?)";
+		String query = "INSERT INTO half_day("
+				+  "date, morning, id_intern)"
+				+ " VALUES (?,?,?)";
 		try (PreparedStatement p = DbConnect.getConnector().prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
 			p.setDate(1, getDate());
 			p.setBoolean(2, isMorning());
+			p.setInt(3,  getIdUser());
 			
 			p.executeUpdate();
 			
@@ -58,7 +81,7 @@ public class HalfDay implements Crud{
 	
 	@Override
 	public List<?> selectAll() {
-		String query = "SELECT 'id_hd', `date`, `morning`"
+		String query = "SELECT 'id_hd', `date`, `morning`, ichecked, fchecked"
 				+ " FROM `half_day`";
 		ArrayList<HalfDay> halfdays = new ArrayList<>();
 		try (PreparedStatement p = DbConnect.getConnector().prepareStatement(query)){
@@ -69,6 +92,38 @@ public class HalfDay implements Crud{
 				d.setIdHd(result.getInt("id_hd"));
 				d.setDate(result.getDate("date"));
 				d.setMorning(result.getBoolean("morning"));
+				d.setIchecked(result.getBoolean("ichecked"));
+				d.setFchecked(result.getBoolean("fchecked"));
+				
+				halfdays.add(d);
+			}
+			DbConnect.getConnector().close();
+			
+		}
+		catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return halfdays;
+	}
+	
+	public ArrayList<HalfDay> selectAllByIntern() {
+		String query = "SELECT h.id_hd, h.date, h.morning, h.ichecked, h.fchecked"
+				+ " FROM half_day h, intern i"
+				+ " WHERE h.id_intern = i.id_intern"
+				+ " AND i.id_intern = ?;";
+		ArrayList<HalfDay> halfdays = new ArrayList<>();
+		try (PreparedStatement p = DbConnect.getConnector().prepareStatement(query)){
+			
+			p.setInt(1, getIdUser());
+			
+			ResultSet result = p.executeQuery();
+			while (result.next()) {
+				HalfDay d = new HalfDay();
+				d.setIdHd(result.getInt("id_hd"));
+				d.setDate(result.getDate("date"));
+				d.setMorning(result.getBoolean("morning"));
+				d.setIchecked(result.getBoolean("ichecked"));
+				d.setFchecked(result.getBoolean("fchecked"));
 				
 				halfdays.add(d);
 			}

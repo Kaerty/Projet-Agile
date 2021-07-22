@@ -1,0 +1,8 @@
+#showinterns{
+	display: none;
+}
+
+#emailsent{
+	color: red;
+	display: none;
+}
